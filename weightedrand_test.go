@@ -1,4 +1,4 @@
-package weightedrand
+package weightedrand_test
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/nikole-dunixi/weightedrand"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -300,8 +301,8 @@ func testWeightedProbabilitiesWithinTolerance(
 
 	totalWeight := decimal.Zero
 	for _, item := range items {
-		if currentWeight := weightAsDecimal(item.Weight); decimal.Zero.Equal(currentWeight) {
-			totalWeight = totalWeight.Add(one)
+		if currentWeight := WeightAsDecimal(item.Weight); decimal.Zero.Equal(currentWeight) {
+			totalWeight = totalWeight.Add(One)
 		} else {
 			totalWeight = totalWeight.Add(currentWeight)
 		}
@@ -309,8 +310,8 @@ func testWeightedProbabilitiesWithinTolerance(
 
 	expectedProportions := make(map[MarbleColor]decimal.Decimal)
 	for _, item := range items {
-		if currentWeight := weightAsDecimal(item.Weight); decimal.Zero.Equal(currentWeight) {
-			expectedProportions[item.Item] = one.Div(totalWeight)
+		if currentWeight := WeightAsDecimal(item.Weight); decimal.Zero.Equal(currentWeight) {
+			expectedProportions[item.Item] = One.Div(totalWeight)
 		} else {
 			expectedProportions[item.Item] = currentWeight.Div(totalWeight)
 		}

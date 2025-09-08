@@ -8,10 +8,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var one decimal.Decimal
+var One decimal.Decimal
 
 func init() {
-	one = decimal.NewFromInt(1)
+	One = decimal.NewFromInt(1)
 }
 
 // Weight is a type constraint that allows any signed or unsigned integer type.
@@ -133,9 +133,9 @@ func NewAliasVoseMethod[TItem any, TWeight Weight](random RandIntN, items ...Wei
 		// you take the two into consideration.
 		nextItem := weightedItem[TItem]{
 			Item:   greater.Item,
-			Weight: greater.Weight.Add(lesser.Weight).Sub(one),
+			Weight: greater.Weight.Add(lesser.Weight).Sub(One),
 		}
-		if nextProbability := nextItem.Weight; nextProbability.LessThan(one) {
+		if nextProbability := nextItem.Weight; nextProbability.LessThan(One) {
 			small = append(small, nextItem)
 		} else {
 			large = append(large, nextItem)
@@ -147,7 +147,7 @@ func NewAliasVoseMethod[TItem any, TWeight Weight](random RandIntN, items ...Wei
 		greaterItem := large[0]
 		tuples = append(tuples,
 			aliasTuple[TItem]{
-				probability: one,
+				probability: One,
 				primaryItem: greaterItem.Item,
 			},
 		)
@@ -158,7 +158,7 @@ func NewAliasVoseMethod[TItem any, TWeight Weight](random RandIntN, items ...Wei
 		smallerItem := small[0]
 		tuples = append(tuples,
 			aliasTuple[TItem]{
-				probability: one,
+				probability: One,
 				primaryItem: smallerItem.Item,
 			},
 		)
@@ -178,9 +178,9 @@ func createPartitionedItems[TValue any, TWeight Weight](items []WeightedItem[TVa
 	// and sums the total weight
 	for _, currentItem := range items {
 		// If no weight is provided, it is assumed to be 1
-		currentWeight := weightAsDecimal(currentItem.Weight)
+		currentWeight := WeightAsDecimal(currentItem.Weight)
 		if currentWeight.Equal(decimal.Zero) {
-			currentWeight = one
+			currentWeight = One
 		} else if currentWeight.LessThan(decimal.Zero) {
 			panic(fmt.Sprintf("weight must be non-negative value, but was %s", currentWeight.String()))
 		}
@@ -208,7 +208,7 @@ func createPartitionedItems[TValue any, TWeight Weight](items []WeightedItem[TVa
 		return a.Weight.Cmp(b.Weight)
 	})
 	index := slices.IndexFunc(itemBuffer, func(item weightedItem[TValue]) bool {
-		return item.Weight.GreaterThanOrEqual(one)
+		return item.Weight.GreaterThanOrEqual(One)
 	})
 
 	// Copy into dedicated slices. We cannot optimize with subslices, because
@@ -222,7 +222,22 @@ func createPartitionedItems[TValue any, TWeight Weight](items []WeightedItem[TVa
 	return resultSmall, resultLarge
 }
 
-func weightAsDecimal[TWeight Weight](value TWeight) decimal.Decimal {
+// WeightAsDecimal converts a value of a numeric type implementing the Weight interface
+// into a decimal.Decimal. It supports various integer types (signed and unsigned) as well
+// as decimal.Decimal itself. If the input value is already a decimal.Decimal, it is returned
+// as-is.
+//
+// Supported types:
+//   - int, int8, int16, int32, int64
+//   - uint, uint8, uint16, uint32, uint64
+//   - decimal.Decimal
+//
+// Example usage:
+//
+//	d := WeightAsDecimal(42)           // returns decimal.Decimal representing 42
+//	d := WeightAsDecimal(int64(1234))  // returns decimal.Decimal representing 1234
+//	d := WeightAsDecimal(decimal.NewFromInt(5)) // returns decimal.Decimal representing 5
+func WeightAsDecimal[TWeight Weight](value TWeight) decimal.Decimal {
 	switch value := any(value).(type) {
 	case int:
 		// int will have at least 32 bits, but is not an alias
